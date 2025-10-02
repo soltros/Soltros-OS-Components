@@ -1,2 +1,2 @@
 # Soltros-OS-Components
- Various components for Soltros OS
+ This repository is to house binaries, scripts, and other tools included into Soltros OS, like **helper.sh**, and etc.
