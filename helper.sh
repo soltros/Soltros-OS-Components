@@ -725,10 +725,10 @@ main() {
         "setup-nixmanager")
             setup_nixmanager
             ;;
-        "apply-soltros-look (KDE)")
+        "apply-soltros-look_plasma")
             apply_soltros_look_plasma
             ;;
-        "apply-soltros-look (Cosmic)")
+        "apply-soltros-look_cosmic")
             apply_soltros_look_cosmic
             ;;
         "add-helper")
