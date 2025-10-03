@@ -139,7 +139,7 @@ change_to_stable() {
         read -r choice
         case "${choice:-1}" in
             1|'') norm="kde"    ; choice_label="KDE Plasma" ; image_suffix="soltros-os_lts"        ; variant="KDE Plasma" ; variant_id="kde"    ;;
-            2)    norm="cosmic" ; choice_label="COSMIC"     ; image_suffix="soltros-os_lts_cosmic" ; variant="COSMIC"     ; variant_id="cosmic" ;;
+            2)    norm="cosmic" ; choice_label="COSMIC"     ; image_suffix="soltros-lts_cosmic" ; variant="COSMIC"     ; variant_id="cosmic" ;;
             3)    echo "Canceled."; return 1 ;;
             *)    echo "Invalid selection."; return 2 ;;
         esac
@@ -154,7 +154,7 @@ change_to_stable() {
                 ;;
             cosmic)
                 choice_label="COSMIC"
-                image_suffix="soltros-os_lts_cosmic"
+                image_suffix="soltros-lts_cosmic"
                 variant="COSMIC"
                 variant_id="cosmic"
                 ;;
@@ -240,7 +240,7 @@ change_to_unstable() {
         read -r choice
         case "${choice:-1}" in
             1|'') norm="kde"    ; choice_label="KDE Plasma" ; image_suffix="soltros-os"                   ; variant="KDE Plasma" ; variant_id="kde"    ;;
-            2)    norm="cosmic" ; choice_label="COSMIC"     ; image_suffix="soltros-os_unstable_cosmic"  ; variant="COSMIC"     ; variant_id="cosmic" ;;
+            2)    norm="cosmic" ; choice_label="COSMIC"     ; image_suffix="soltros-unstable_cosmic"  ; variant="COSMIC"     ; variant_id="cosmic" ;;
             3)    echo "Canceled."; return 1 ;;
             *)    echo "Invalid selection."; return 2 ;;
         esac
@@ -255,7 +255,7 @@ change_to_unstable() {
                 ;;
             cosmic)
                 choice_label="COSMIC"
-                image_suffix="soltros-os_unstable_cosmic"
+                image_suffix="soltros-unstable_cosmic"
                 variant="COSMIC"
                 variant_id="cosmic"
                 ;;
