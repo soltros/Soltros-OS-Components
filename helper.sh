@@ -39,26 +39,26 @@ SoltrOS Helper Tool
 Usage: helper [COMMAND]
 
 INSTALL COMMANDS:
-  install                 Install all SoltrOS components
-  install-flatpaks        Install Flatpak applications from remote list
-  install-dev-tools       Install development tools via Flatpak
-  install-gaming          Install gaming tools via Flatpak
-  install-multimedia      Install multimedia tools via Flatpak
-  install-homebrew        Install the Homebrew package manager
-  install-nix             Install the Nix package manager
-  setup-nixmanager        Add the nixmanager.sh script to ~/scripts for easy Nix use
-  add-helper              This adds the helper.sh alias to Bash to make it easier to access
-  add-nixmanager          This adds the nixmanager.sh alias to Bash to make it easier to use Nix packages on SoltrOS
-  download-appimages      Download Feishin and Ryubing to the ~/AppImages folder
-  change-to-zsh           Swap shell to Zsh
-  change-to-fish          Swap shell to Fish
-  change-to-bash          Swap shell to Bash
-  change-to-stable        Swap from Soltros OS unstable rolling to LTS rolling
-  change-to-unstable      Swap from Soltros OS LTS rolling to unstable rolling
-  apply-soltros-look      Apply the SoltrOS theme to Plasma
-  helper-off              Turn off the helper prompt in Zsh (delete ~/.no-helper-reminder to re-enable)
-  download-iso            Download the latest Desktop ISO directly to ~/Downloads
-
+  install                   Install all SoltrOS components
+  install-flatpaks          Install Flatpak applications from remote list
+  install-dev-tools         Install development tools via Flatpak
+  install-gaming            Install gaming tools via Flatpak
+  install-multimedia        Install multimedia tools via Flatpak
+  install-homebrew          Install the Homebrew package manager
+  install-nix               Install the Nix package manager
+  setup-nixmanager          Add the nixmanager.sh script to ~/scripts for easy Nix use
+  add-helper                This adds the helper.sh alias to Bash to make it easier to access
+  add-nixmanager            This adds the nixmanager.sh alias to Bash to make it easier to use Nix packages on SoltrOS
+  download-appimages        Download Feishin and Ryubing to the ~/AppImages folder
+  change-to-zsh             Swap shell to Zsh
+  change-to-fish            Swap shell to Fish
+  change-to-bash            Swap shell to Bash
+  change-to-stable          Swap from Soltros OS unstable rolling to LTS rolling
+  change-to-unstable        Swap from Soltros OS LTS rolling to unstable rolling
+  apply-soltros-look_plasma Apply the SoltrOS theme to Plasma
+  apply-soltros-look_cosmic Apply the SoltrOS theme to Cosmic
+  helper-off                Turn off the helper prompt in Zsh (delete ~/.no-helper-reminder to re-enable)
+ 
 SETUP COMMANDS:
   setup-git              Configure Git with user credentials and SSH signing
   setup-distrobox        Setup distrobox containers for development
@@ -358,16 +358,6 @@ setup_nixmanager() {
     fi
 }
 
-download_iso(){
-    print_header "Downloading latest ISO to ~/Downloads..."
-    if wget https://publicweb.soltros.info/files/soltros-os-latest-42.iso -O ~/Downloads/soltros-os-latest-42.iso; then
-        print_success "soltros-os-latest-42.iso downloaded to ~/Downloads!"
-    else
-        print_error "Failed to download soltros-os-latest-42.iso..."
-        exit 1
-    fi
-}
-
 add_helper() {
     local bashrc="$HOME/.bashrc"
     local alias_cmd='alias helper="sh /usr/share/soltros/bin/helper.sh"'
@@ -394,9 +384,17 @@ add_nixmanager() {
     fi
 }
 
-apply_soltros_look() {
+apply_soltros_look_plasma() {
     if echo "To apply the theme, run the theme script."; then
-        echo "sh /usr/share/soltros/bin/soltros-os-theme.sh"
+        echo "sh /usr/share/soltros/bin/soltros-os-theme_plasma.sh"
+    else
+        echo "Run helper to acess the help script."
+    fi
+}
+
+apply_soltros_look_cosmic() {
+    if echo "To apply the theme, run the theme script."; then
+        echo "sh /usr/share/soltros/bin/soltros-os-theme_cosmic.sh"
     else
         echo "Run helper to acess the help script."
     fi
@@ -727,17 +725,17 @@ main() {
         "setup-nixmanager")
             setup_nixmanager
             ;;
-        "apply-soltros-look")
-            apply_soltros_look
+        "apply-soltros-look (KDE)")
+            apply_soltros_look_plasma
+            ;;
+        "apply-soltros-look (Cosmic)")
+            apply_soltros_look_cosmic
             ;;
         "add-helper")
             add_helper
             ;;
         "add-nixmanager")
             add_nixmanager
-            ;;
-        "download-iso")
-            download_iso
             ;;
         "change-to-zsh")
             change_to_zsh
