@@ -47,6 +47,7 @@ INSTALL COMMANDS:
   install-homebrew          Install the Homebrew package manager
   install-nix               Install the Nix package manager
   setup-nixmanager          Add the nixmanager.sh script to ~/scripts for easy Nix use
+  setup-miracle             Sets up the Miracle WM sane defaults when running Soltros OS Miracle
   add-helper                This adds the helper.sh alias to Bash to make it easier to access
   add-nixmanager            This adds the nixmanager.sh alias to Bash to make it easier to use Nix packages on SoltrOS
   download-appimages        Download Feishin and Ryubing to the ~/AppImages folder
@@ -382,6 +383,41 @@ add_nixmanager() {
         echo "$alias_cmd" >> "$bashrc"
         echo "✓ Alias added to $bashrc"
     fi
+}
+
+setup_miracle() {
+    print_header "Setting up Miracle WM configuration from skel"
+    
+    local skel_config="/etc/skel/.config"
+    local user_config="$HOME/.config"
+    
+    # Check if skel config exists
+    if [ ! -d "$skel_config" ]; then
+        print_error "Skel config directory not found at $skel_config"
+        exit 1
+    fi
+    
+    # Create user config directory if it doesn't exist
+    mkdir -p "$user_config"
+    
+    print_info "Copying Miracle WM configuration from /etc/skel/.config/ to ~/.config/..."
+    
+    # Copy everything from skel .config to user .config
+    # Using -r for recursive, -n to not overwrite existing files (use -f to force overwrite)
+    if cp -rn "$skel_config"/* "$user_config/" 2>/dev/null; then
+        print_success "Miracle WM configuration copied successfully!"
+        print_info "Configuration files are now in $user_config/"
+    else
+        print_warning "Some files may already exist. Using -f flag to force overwrite..."
+        if cp -rf "$skel_config"/* "$user_config/"; then
+            print_success "Miracle WM configuration copied successfully (overwrote existing files)!"
+        else
+            print_error "Failed to copy Miracle WM configuration"
+            exit 1
+        fi
+    fi
+    
+    print_info "Miracle WM setup complete. Log out and back in for changes to take effect."
 }
 
 apply_soltros_look_plasma() {
@@ -724,6 +760,9 @@ main() {
             ;;
         "setup-nixmanager")
             setup_nixmanager
+            ;;
+        "setup-miracle")
+            setup_miracle
             ;;
         "apply-soltros-look_plasma")
             apply_soltros_look_plasma
