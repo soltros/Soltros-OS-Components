@@ -134,13 +134,15 @@ change_to_stable() {
         echo "Select SoltrOS LTS desktop:"
         echo "  1) KDE Plasma (default)"
         echo "  2) COSMIC"
+        echo "  3) Liri"
         echo "  3) Cancel"
         printf "Enter a number [1]: "
         read -r choice
         case "${choice:-1}" in
             1|'') norm="kde"    ; choice_label="KDE Plasma" ; image_suffix="soltros-os_lts"        ; variant="KDE Plasma" ; variant_id="kde"    ;;
             2)    norm="cosmic" ; choice_label="COSMIC"     ; image_suffix="soltros-lts_cosmic" ; variant="COSMIC"     ; variant_id="cosmic" ;;
-            3)    echo "Canceled."; return 1 ;;
+            3)    norm="liri" ; choice_label="Liri" ; image_suffix="soltros-os-lts_liri" ; variant="Liri"     ; variant_id="liri" ;;
+            4)    echo "Canceled."; return 1 ;;
             *)    echo "Invalid selection."; return 2 ;;
         esac
     else
@@ -157,6 +159,12 @@ change_to_stable() {
                 image_suffix="soltros-lts_cosmic"
                 variant="COSMIC"
                 variant_id="cosmic"
+                ;;
+            liri)
+                choice_label="Liri"
+                variant="Liri"
+                image_suffix="soltros-os-lts_liri"
+                variant_id="liri"
                 ;;
             *)
                 echo "Unknown desktop '$choice_raw'. Use: kde|cosmic"
@@ -241,7 +249,8 @@ change_to_unstable() {
         case "${choice:-1}" in
             1|'') norm="kde"    ; choice_label="KDE Plasma" ; image_suffix="soltros-os"                   ; variant="KDE Plasma" ; variant_id="kde"    ;;
             2)    norm="cosmic" ; choice_label="COSMIC"     ; image_suffix="soltros-unstable_cosmic"  ; variant="COSMIC"     ; variant_id="cosmic" ;;
-            3)    echo "Canceled."; return 1 ;;
+            3)    norm="liri" ; choice_label="Liri" ; image_suffix="soltros-os-unstable_liri" ; variant="Liri"     ; variant_id="liri" ;;
+            4)    echo "Canceled."; return 1 ;;
             *)    echo "Invalid selection."; return 2 ;;
         esac
     else
@@ -258,6 +267,12 @@ change_to_unstable() {
                 image_suffix="soltros-unstable_cosmic"
                 variant="COSMIC"
                 variant_id="cosmic"
+                ;;
+            liri)
+                choice_label="Liri"
+                variant="Liri"
+                image_suffix="soltros-os-unstable_liri"
+                variant_id="liri"
                 ;;
             *)
                 echo "Unknown desktop '$choice_raw'. Use: kde|cosmic"
