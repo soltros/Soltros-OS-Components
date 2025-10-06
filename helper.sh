@@ -134,7 +134,7 @@ change_to_stable() {
         echo "Select SoltrOS LTS desktop:"
         echo "  1) KDE Plasma (default)"
         echo "  2) COSMIC"
-        echo "  3) Liri"
+        echo "  3) Gnome"
         echo "  3) Cancel"
         printf "Enter a number [1]: "
         read -r choice
