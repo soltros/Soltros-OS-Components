@@ -30,7 +30,6 @@ usage() {
     echo "Examples:"
     echo "  $SCRIPT_NAME install firefox"
     echo "  $SCRIPT_NAME remove firefox"
-    echo "  $SCRIPT_NAME remove 0"
     echo "  $SCRIPT_NAME search vim"
     echo "  $SCRIPT_NAME list"
 }
@@ -49,7 +48,6 @@ update_desktop_shortcuts() {
     
     # Determinate Nix installer paths
     local nix_profile_path="$HOME/.nix-profile"
-    local nix_var_path="/var/home/nix"
     
     # Update desktop database for Nix profile paths
     if command -v update-desktop-database &> /dev/null; then
@@ -80,7 +78,7 @@ update_desktop_shortcuts() {
     fi
     
     # KDE Plasma specific updates
-    if [[ "$XDG_CURRENT_DESKTOP" == *"KDE"* ]] || [[ "$DESKTOP_SESSION" == *"plasma"* ]]; then
+    if [[ "${XDG_CURRENT_DESKTOP:-}" == *"KDE"* ]] || [[ "${DESKTOP_SESSION:-}" == *"plasma"* ]]; then
         # Force rebuild of KDE service cache to pick up new .desktop files
         if command -v kbuildsycoca5 &> /dev/null; then
             kbuildsycoca5 --noincremental 2>/dev/null || true
@@ -95,7 +93,7 @@ update_desktop_shortcuts() {
     fi
     
     # GNOME specific updates
-    if [[ "$XDG_CURRENT_DESKTOP" == *"GNOME"* ]]; then
+    if [[ "${XDG_CURRENT_DESKTOP:-}" == *"GNOME"* ]]; then
         # Update GNOME's application cache
         if command -v glib-compile-schemas &> /dev/null; then
             if [[ -d "$nix_profile_path/share/glib-2.0/schemas" ]]; then
@@ -135,7 +133,7 @@ install_package() {
     
     echo -e "${BLUE}Installing package: $package${NC}"
     
-    if nix profile install "$HOME/.config/nixpkgs-soltros#$package"; then
+    if nix profile add "$HOME/.config/nixpkgs-soltros#$package"; then
         echo -e "${GREEN}✓ Successfully installed: $package${NC}"
         update_desktop_shortcuts
     else
@@ -147,54 +145,24 @@ install_package() {
 
 # Function to remove a package
 remove_package() {
-    local package="$1"
+    local specified_package="$1"
 
-    if [[ -z "$package" ]]; then
-        echo -e "${RED}Error: Package name or index is required${NC}" >&2
-        echo "Usage: $SCRIPT_NAME remove <package_name|index>"
+    if [[ -z "$specified_package" ]]; then
+        echo -e "${RED}Error: Package identifier (name, index, or path) is required${NC}" >&2
+        echo "Usage: $SCRIPT_NAME remove <identifier>"
         exit 1
     fi
 
-    echo -e "${BLUE}Removing package: $package${NC}"
+    echo -e "${BLUE}Attempting to remove: $specified_package${NC}"
 
-    # Check if the input is a number (index)
-    if [[ "$package" =~ ^[0-9]+$ ]]; then
-        # Remove by index
-        if nix profile remove "$package"; then
-            echo -e "${GREEN}✓ Successfully removed package at index: $package${NC}"
-            update_desktop_shortcuts
-        else
-            echo -e "${RED}✗ Failed to remove package at index: $package${NC}" >&2
-            echo "Use '$SCRIPT_NAME list' to see installed packages and their indices"
-            exit 1
-        fi
+    # Directly pass the provided argument to 'nix profile remove'
+    if nix profile remove "$specified_package"; then
+        echo -e "${GREEN}✓ Successfully removed: $specified_package${NC}"
+        update_desktop_shortcuts
     else
-        # Try to find and remove by package name using the flake path
-        # First, try removing with the full flake attribute path
-        if nix profile remove "$HOME/.config/nixpkgs-soltros#$package"; then
-            echo -e "${GREEN}✓ Successfully removed: $package${NC}"
-            update_desktop_shortcuts
-        else
-            # If that fails, try to find the index from the package list
-            echo -e "${YELLOW}Attempting to find package index...${NC}"
-            local index
-            index=$(nix profile list | grep -F "$package" | head -n1 | awk '{print $1}')
-            
-            if [[ -n "$index" ]]; then
-                echo -e "${BLUE}Found package at index: $index${NC}"
-                if nix profile remove "$index"; then
-                    echo -e "${GREEN}✓ Successfully removed: $package${NC}"
-                    update_desktop_shortcuts
-                else
-                    echo -e "${RED}✗ Failed to remove: $package${NC}" >&2
-                    exit 1
-                fi
-            else
-                echo -e "${RED}✗ Package not found: $package${NC}" >&2
-                echo "Use '$SCRIPT_NAME list' to see installed packages"
-                exit 1
-            fi
-        fi
+        echo -e "${RED}✗ Failed to remove: $specified_package${NC}" >&2
+        echo "Use '$SCRIPT_NAME list' to find the correct identifier."
+        exit 1
     fi
 }
 
@@ -221,9 +189,8 @@ search_packages() {
 # Function to upgrade all packages
 upgrade_packages() {
     echo -e "${BLUE}Upgrading all packages...${NC}"
-    if nix profile upgrade '.*'; then
+    if nix profile upgrade; then
         echo -e "${GREEN}✓ All packages upgraded successfully${NC}"
-        update_desktop_shortcuts
     else
         echo -e "${RED}✗ Failed to upgrade packages${NC}" >&2
         exit 1
