@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# Soltros OS - Emergency Policy.json Fix Script
-# This script fixes container signature verification issues
+# Soltros OS - Emergency Update & Policy Fix Script
+# This script temporarily bypasses signature verification, updates the system,
+# then installs the correct signed policy for future updates.
 
 set -e
 
 echo "================================================"
-echo "Soltros OS - Emergency Policy Fix"
+echo "Soltros OS - Emergency Update & Policy Fix"
 echo "================================================"
 echo ""
 
@@ -29,9 +30,56 @@ if [ -f "$POLICY_FILE" ]; then
     echo ""
 fi
 
-# Create the new policy.json
-echo "📝 Creating new policy.json configuration..."
+# Step 1: Install temporary permissive policy
+echo "📝 Step 1: Installing temporary permissive policy..."
+cat > "$POLICY_FILE" << 'EOF'
+{
+    "default": [
+        {
+            "type": "insecureAcceptAnything"
+        }
+    ],
+    "transports": {
+        "docker": {
+            "ghcr.io/soltros": [
+                {
+                    "type": "insecureAcceptAnything"
+                }
+            ]
+        },
+        "docker-daemon": {
+            "": [
+                {
+                    "type": "insecureAcceptAnything"
+                }
+            ]
+        }
+    }
+}
+EOF
 
+echo "✅ Temporary policy installed"
+echo ""
+
+# Step 2: Run bootc upgrade
+echo "🔄 Step 2: Running system update..."
+echo "This may take several minutes..."
+echo ""
+
+if bootc upgrade; then
+    echo ""
+    echo "✅ System update completed successfully!"
+    echo ""
+else
+    echo ""
+    echo "❌ ERROR: System update failed"
+    echo "   Restoring original policy..."
+    cp "$BACKUP_FILE" "$POLICY_FILE"
+    exit 1
+fi
+
+# Step 3: Install proper signed policy
+echo "📝 Step 3: Installing proper signature verification policy..."
 cat > "$POLICY_FILE" << 'EOF'
 {
     "default": [
@@ -107,11 +155,11 @@ cat > "$POLICY_FILE" << 'EOF'
 }
 EOF
 
-echo "✅ New policy.json created"
+echo "✅ Proper policy installed"
 echo ""
 
 # Verify JSON syntax
-echo "🔍 Verifying JSON syntax..."
+echo "🔍 Verifying policy configuration..."
 if command -v jq &> /dev/null; then
     if jq . "$POLICY_FILE" > /dev/null 2>&1; then
         echo "✅ JSON syntax is valid"
@@ -133,20 +181,25 @@ if [ -f "$PUB_KEY" ]; then
     echo "✅ Soltros public key found at $PUB_KEY"
 else
     echo "⚠️  Warning: Public key not found at $PUB_KEY"
-    echo "   Signature verification may fail for Soltros images"
+    echo "   This should be included in the updated image"
 fi
 
 echo ""
 echo "================================================"
-echo "✅ Policy fix completed successfully!"
+echo "✅ Update and policy fix completed successfully!"
 echo "================================================"
 echo ""
-echo "What was fixed:"
-echo "  • Added signature verification for all Soltros OS variants"
-echo "  • Ensured Distrobox and other containers work without issues"
+echo "What was done:"
+echo "  1. Temporarily bypassed signature verification"
+echo "  2. Updated system to latest signed image"
+echo "  3. Installed proper signature verification policy"
+echo ""
+echo "Next steps:"
+echo "  • Reboot to boot into the new image"
+echo "  • Future updates will use signature verification automatically"
 echo "  • Backup saved to: $BACKUP_FILE"
 echo ""
-echo "You can now run rpm-ostree commands normally."
+echo "Please reboot your system now: sudo reboot"
 echo ""
 
 exit 0
