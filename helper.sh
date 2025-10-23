@@ -66,7 +66,6 @@ SETUP COMMANDS:
 CONFIGURE COMMANDS:
   enable-amdgpu-oc       Enable AMD GPU overclocking support
   toggle-session         Toggle between X11 and Wayland sessions
-  unblock-docker         Change /etc/containers/policy.json to allow containers from unapproved registries (Like Dockerhub)
 
 OTHER COMMANDS:
   update                 Update the system (rpm-ostree, flatpaks, etc.)
@@ -577,17 +576,6 @@ setup_distrobox() {
 # CONFIGURE FUNCTIONS
 # ───────────────────────────────────────────────
 
-unblock_docker(){
-    print_header "Unblocking Docker container registry in policy.json"
-    if sudo sed -i 's/"type": "reject"/"type": "insecureAcceptAnything"/g' /etc/containers/policy.json; then
-        touch ~/.unblock-docker
-        print_info "Successfully unblocked Docker container registry in /etc/containers/policy.json"
-    else
-        print_error "Failed to change container policy."
-        exit 1
-    fi
-}
-
 soltros_enable_amdgpu_oc() {
     print_header "Enabling AMD GPU overclocking support"
     
@@ -773,9 +761,6 @@ main() {
             ;;
         "setup-git")
             soltros_setup_git
-            ;;
-        "unblock-docker")
-            unblock_docker
             ;;
         "setup-distrobox")
             setup_distrobox
