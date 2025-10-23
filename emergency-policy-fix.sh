@@ -36,7 +36,7 @@ cat > "$POLICY_FILE" << 'EOF'
 {
     "default": [
         {
-            "type": "insecureAcceptAnything"
+            "type": "reject"
         }
     ],
     "transports": {
