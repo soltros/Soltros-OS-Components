@@ -1,13 +1,12 @@
 #!/bin/bash
 
-# Soltros OS - Emergency Update & Policy Fix Script
-# This script temporarily bypasses signature verification, updates the system,
-# then installs the correct signed policy for future updates.
+# Soltros OS - Emergency Policy.json Fix Script
+# This script fixes container policy issues
 
 set -e
 
 echo "================================================"
-echo "Soltros OS - Emergency Update & Policy Fix"
+echo "Soltros OS - Emergency Policy Fix"
 echo "================================================"
 echo ""
 
@@ -30,8 +29,9 @@ if [ -f "$POLICY_FILE" ]; then
     echo ""
 fi
 
-# Step 1: Install temporary permissive policy
-echo "📝 Step 1: Installing temporary permissive policy..."
+# Create the new policy.json
+echo "📝 Creating new policy.json configuration..."
+
 cat > "$POLICY_FILE" << 'EOF'
 {
     "default": [
@@ -58,108 +58,11 @@ cat > "$POLICY_FILE" << 'EOF'
 }
 EOF
 
-echo "✅ Temporary policy installed"
-echo ""
-
-# Step 2: Run bootc upgrade
-echo "🔄 Step 2: Running system update..."
-echo "This may take several minutes..."
-echo ""
-
-if bootc upgrade; then
-    echo ""
-    echo "✅ System update completed successfully!"
-    echo ""
-else
-    echo ""
-    echo "❌ ERROR: System update failed"
-    echo "   Restoring original policy..."
-    cp "$BACKUP_FILE" "$POLICY_FILE"
-    exit 1
-fi
-
-# Step 3: Install proper signed policy
-echo "📝 Step 3: Installing proper signature verification policy..."
-cat > "$POLICY_FILE" << 'EOF'
-{
-    "default": [
-        {
-            "type": "insecureAcceptAnything"
-        }
-    ],
-    "transports": {
-        "docker": {
-            "ghcr.io/soltros/soltros-os": [
-                {
-                    "type": "sigstoreSigned",
-                    "keyPath": "/etc/pki/containers/soltros.pub",
-                    "signedIdentity": {
-                        "type": "matchRepository"
-                    }
-                }
-            ],
-            "ghcr.io/soltros/soltros-os_lts": [
-                {
-                    "type": "sigstoreSigned",
-                    "keyPath": "/etc/pki/containers/soltros.pub",
-                    "signedIdentity": {
-                        "type": "matchRepository"
-                    }
-                }
-            ],
-            "ghcr.io/soltros/soltros-lts_cosmic": [
-                {
-                    "type": "sigstoreSigned",
-                    "keyPath": "/etc/pki/containers/soltros.pub",
-                    "signedIdentity": {
-                        "type": "matchRepository"
-                    }
-                }
-            ],
-            "ghcr.io/soltros/soltros-unstable_cosmic": [
-                {
-                    "type": "sigstoreSigned",
-                    "keyPath": "/etc/pki/containers/soltros.pub",
-                    "signedIdentity": {
-                        "type": "matchRepository"
-                    }
-                }
-            ],
-            "ghcr.io/soltros/soltros-os-lts_gnome": [
-                {
-                    "type": "sigstoreSigned",
-                    "keyPath": "/etc/pki/containers/soltros.pub",
-                    "signedIdentity": {
-                        "type": "matchRepository"
-                    }
-                }
-            ],
-            "ghcr.io/soltros/soltros-os-unstable_gnome": [
-                {
-                    "type": "sigstoreSigned",
-                    "keyPath": "/etc/pki/containers/soltros.pub",
-                    "signedIdentity": {
-                        "type": "matchRepository"
-                    }
-                }
-            ]
-        },
-        "docker-daemon": {
-            "": [
-                {
-                    "type": "insecureAcceptAnything"
-                }
-            ]
-        }
-    }
-}
-EOF
-
-echo "✅ Proper policy installed"
+echo "✅ New policy.json created"
 echo ""
 
 # Verify JSON syntax
-echo "🔍 Verifying policy configuration..."
+echo "🔍 Verifying JSON syntax..."
 if command -v jq &> /dev/null; then
     if jq . "$POLICY_FILE" > /dev/null 2>&1; then
         echo "✅ JSON syntax is valid"
@@ -174,32 +77,19 @@ else
 fi
 
 echo ""
-
-# Check for public key
-PUB_KEY="/etc/pki/containers/soltros.pub"
-if [ -f "$PUB_KEY" ]; then
-    echo "✅ Soltros public key found at $PUB_KEY"
-else
-    echo "⚠️  Warning: Public key not found at $PUB_KEY"
-    echo "   This should be included in the updated image"
-fi
-
-echo ""
 echo "================================================"
-echo "✅ Update and policy fix completed successfully!"
+echo "✅ Policy fix completed successfully!"
 echo "================================================"
 echo ""
-echo "What was done:"
-echo "  1. Temporarily bypassed signature verification"
-echo "  2. Updated system to latest signed image"
-echo "  3. Installed proper signature verification policy"
-echo ""
-echo "Next steps:"
-echo "  • Reboot to boot into the new image"
-echo "  • Future updates will use signature verification automatically"
+echo "What was fixed:"
+echo "  • Updated container policy for compatibility"
+echo "  • Ensured Distrobox and rpm-ostree work correctly"
 echo "  • Backup saved to: $BACKUP_FILE"
 echo ""
-echo "Please reboot your system now: sudo reboot"
+echo "Note: Images are signed with cosign for supply chain transparency."
+echo "Signature enforcement will be enabled in a future release."
+echo ""
+echo "You can now run bootc upgrade normally."
 echo ""
 
 exit 0
