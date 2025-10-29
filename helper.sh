@@ -621,18 +621,7 @@ toggle_session() {
 
 ublue_update() {
     print_header "Updating the system"
-    
-    # Check if unblock-docker file exists (user is in insecure mode)
-    local docker_unblocked=false
-    local config_file="/etc/containers/policy.json"  # Adjust path as needed
-    
-    if [[ -f ~/.unblock-docker ]]; then
-        docker_unblocked=true
-        print_info "Docker unblock detected, temporarily enabling secure mode for updates..."
-        # Switch from insecureAcceptAnything to reject
-        sudo sed -i 's/"type": "insecureAcceptAnything"/"type": "reject"/g' "$config_file"
-    fi
-    
+       
     print_info "Updating SoltrOS with Bootc..."
     sudo bootc upgrade || true
     
@@ -644,17 +633,21 @@ ublue_update() {
         distrobox upgrade --all || true
     fi
     
-    if command -v toolbox &> /dev/null; then
-        print_info "Updating toolbox containers..."
-        for container in $(toolbox list -c | tail -n +2 | awk '{print $2}'); do
-            toolbox run -c "$container" sudo dnf update -y || true
-        done
-    fi
+    if command -v nix &> /dev/null; then
+    print_info "Updating SoltrOS Nix Flake..."
     
-    # Switch back to insecureAcceptAnything if we changed it
-    if [[ "$docker_unblocked" == true ]]; then
-        print_info "Restoring insecure mode..."
-        sudo sed -i 's/"type": "reject"/"type": "insecureAcceptAnything"/g' "$config_file"
+    # Navigate to flake directory and update it
+    cd ~/.config/nixpkgs-soltros || { echo "Failed to navigate to flake directory"; return 1; }
+    
+    # Update the flake inputs
+    nix flake update
+    
+    # Upgrade all packages by index (0-6 based on your output)
+    for i in {0..20}; do
+        nix profile upgrade "$i" 2>/dev/null || true
+    done
+    
+    print_info "Flake and packages updated successfully"
     fi
     
     print_success "System update complete"
