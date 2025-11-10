@@ -122,6 +122,7 @@ change_to_stable() {
     #   change_to_stable                  # interactive prompt
     #   change_to_stable kde|plasma       # non-interactive
     #   change_to_stable cosmic
+    #   change_to_stable hyprvibe
 
     # Normalize a string to lowercase alphanumerics/underscores
     _norm() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/_/g'; }
@@ -134,14 +135,17 @@ change_to_stable() {
         echo "  1) KDE Plasma (default)"
         echo "  2) COSMIC"
         echo "  3) Gnome"
-        echo "  3) Cancel"
+        echo "  4) Hyprvibe"
+        echo "  5) Cancel"
+
         printf "Enter a number [1]: "
         read -r choice
         case "${choice:-1}" in
             1|'') norm="kde"    ; choice_label="KDE Plasma" ; image_suffix="soltros-os_lts"        ; variant="KDE Plasma" ; variant_id="kde"    ;;
             2)    norm="cosmic" ; choice_label="COSMIC"     ; image_suffix="soltros-lts_cosmic" ; variant="COSMIC"     ; variant_id="cosmic" ;;
             3)    norm="gnome" ; choice_label="Gnome" ; image_suffix="soltros-os-lts_gnome" ; variant="gnome"     ; variant_id="gnome" ;;
-            4)    echo "Canceled."; return 1 ;;
+            4)    norm="hyprvibe" ; choice_label="Hyprvibe" ; image_suffix="soltros-os-lts_hyprvibe" ; variant="hyprvibe"     ; variant_id="hyprvibe" ;;
+            5)    echo "Canceled."; return 1 ;;
             *)    echo "Invalid selection."; return 2 ;;
         esac
     else
@@ -164,6 +168,12 @@ change_to_stable() {
                 variant="gnome"
                 image_suffix="soltros-os-lts_gnome"
                 variant_id="gnome"
+                ;;
+            hyprvibe)
+                choice_label="Hyprvibe"
+                variant="hyprvibe"
+                image_suffix="soltros-os-lts_hyprvibe"
+                variant_id="hyprvibe"
                 ;;
             *)
                 echo "Unknown desktop '$choice_raw'. Use: kde|cosmic"
@@ -231,6 +241,7 @@ change_to_unstable() {
     #   change_to_unstable                  # interactive prompt
     #   change_to_unstable kde|plasma       # non-interactive
     #   change_to_unstable cosmic
+    #   change_to_unstable hyprvibe
 
     # Normalize a string to lowercase alphanumerics/underscores
     _norm() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/_/g'; }
@@ -243,14 +254,16 @@ change_to_unstable() {
         echo "  1) KDE Plasma (default)"
         echo "  2) COSMIC"
         echo "  3) Gnome"
-        echo "  4) Cancel"
+        echo "  4) Hyprvibe"
+        echo "  5) Cancel"
         printf "Enter a number [1]: "
         read -r choice
         case "${choice:-1}" in
             1|'') norm="kde"    ; choice_label="KDE Plasma" ; image_suffix="soltros-os"                   ; variant="KDE Plasma" ; variant_id="kde"    ;;
             2)    norm="cosmic" ; choice_label="COSMIC"     ; image_suffix="soltros-unstable_cosmic"  ; variant="COSMIC"     ; variant_id="cosmic" ;;
             3)    norm="gnome" ; choice_label="Gnome" ; image_suffix="soltros-os-unstable_gnome" ; variant="gnome"     ; variant_id="gnome" ;;
-            4)    echo "Canceled."; return 1 ;;
+            4)    norm="hyprvibe" ; choice_label="Hyprvibe" ; image_suffix="soltros-os-unstable_hyprvibe" ; variant="hyprvibe"     ; variant_id="hyprvibe" ;;
+            5)    echo "Canceled."; return 1 ;;
             *)    echo "Invalid selection."; return 2 ;;
         esac
     else
@@ -273,6 +286,12 @@ change_to_unstable() {
                 variant="gnome"
                 image_suffix="soltros-os-unstable_gnome"
                 variant_id="gnome"
+                ;;
+            hyprvibe)
+                choice_label="Hyprvibe"
+                variant="hyprvibe"
+                image_suffix="soltros-os-unstable_hyprvibe"
+                variant_id="hyprvibe"
                 ;;
             *)
                 echo "Unknown desktop '$choice_raw'. Use: kde|cosmic"
