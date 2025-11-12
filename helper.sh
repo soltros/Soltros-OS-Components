@@ -127,24 +127,24 @@ soltros_install_flatpaks() {
     local flatpak_url=""
     case "$variant_id" in
         kde)
-            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_kde"
+            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_kde"
             print_info "Detected KDE Plasma variant"
             ;;
         cosmic)
-            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_cosmic"
+            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_cosmic"
             print_info "Detected COSMIC variant"
             ;;
         gnome)
-            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_gnome"
+            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_gnome"
             print_info "Detected Gnome variant"
             ;;
         hyprvibe)
-            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_hyprvibe"
+            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_hyprvibe"
             print_info "Detected Hyprvibe variant"
             ;;
         *)
             print_warning "Unknown variant '$variant_id', defaulting to KDE"
-            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_kde"
+            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_kde"
             ;;
     esac
 
