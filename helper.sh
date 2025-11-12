@@ -57,8 +57,9 @@ INSTALL COMMANDS:
   change-to-unstable        Swap from Soltros OS LTS rolling to unstable rolling
   apply-soltros-look_plasma Apply the SoltrOS theme to Plasma
   apply-soltros-look_cosmic Apply the SoltrOS theme to Cosmic
+  set-hyprvibe-theme        Apply Hyprvibe theme from /etc/skel (overwrites Hyprland/Dunst/Waybar configs)
   helper-off                Turn off the helper prompt in Zsh (delete ~/.no-helper-reminder to re-enable)
- 
+
 SETUP COMMANDS:
   setup-git              Configure Git with user credentials and SSH signing
   setup-distrobox        Setup distrobox containers for development
@@ -507,6 +508,33 @@ change_to_bash() {
     fi
 }
 
+set_hyprvibe_theme() {
+    print_header "Setting Hyprvibe Theme from /etc/skel"
+
+    print_warning "This will overwrite your existing Hyprland, Dunst, and Waybar configurations!"
+    print_warning "All current configs for these applications will be replaced with defaults from /etc/skel"
+    echo
+    read -p "Do you want to continue? (Y/N): " -n 1 -r
+    echo
+
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Operation cancelled by user"
+        return 0
+    fi
+
+    print_info "Copying configurations from /etc/skel to $HOME..."
+
+    # Copy all configs from /etc/skel, forcing overwrite
+    if sudo cp -rf /etc/skel/. "$HOME/"; then
+        print_success "Hyprvibe theme configurations applied successfully!"
+        print_info "Hyprland, Dunst, and Waybar configs have been updated"
+        print_info "You may need to restart your session for all changes to take effect"
+    else
+        print_error "Failed to copy configurations from /etc/skel"
+        return 1
+    fi
+}
+
 install_gaming() {
     print_header "Installing gaming applications via Flatpak"
     
@@ -806,6 +834,9 @@ main() {
             ;;
         "change-to-stable")
             change_to_stable
+            ;;
+        "set-hyprvibe-theme")
+            set_hyprvibe_theme
             ;;
         "download-appimages")
             download_appimages
