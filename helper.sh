@@ -101,16 +101,55 @@ soltros_install() {
 
 soltros_install_flatpaks() {
     print_header "Installing Flatpak applications from remote list"
-    
+
     print_info "Setting up Flathub repository..."
     if ! flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo; then
         print_error "Failed to add Flathub repository"
         exit 1
     fi
-    
-    print_info "Downloading flatpak list and installing..."
-    if xargs -a <(curl --retry 3 -sL https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks) flatpak --system -y install --reinstall; then
-        print_success "Flatpaks installation complete"
+
+    # Detect desktop variant from /etc/os-release
+    local variant_id=""
+    if [ -f /etc/os-release ]; then
+        # Source the os-release file to get VARIANT_ID
+        source /etc/os-release
+        variant_id="${VARIANT_ID:-}"
+    fi
+
+    # Default to kde if no variant detected
+    if [ -z "$variant_id" ]; then
+        print_warning "No VARIANT_ID detected in /etc/os-release, defaulting to KDE"
+        variant_id="kde"
+    fi
+
+    # Determine which flatpak list to use based on variant
+    local flatpak_url=""
+    case "$variant_id" in
+        kde)
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_kde"
+            print_info "Detected KDE Plasma variant"
+            ;;
+        cosmic)
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_cosmic"
+            print_info "Detected COSMIC variant"
+            ;;
+        gnome)
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_gnome"
+            print_info "Detected Gnome variant"
+            ;;
+        hyprvibe)
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_hyprvibe"
+            print_info "Detected Hyprvibe variant"
+            ;;
+        *)
+            print_warning "Unknown variant '$variant_id', defaulting to KDE"
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks_kde"
+            ;;
+    esac
+
+    print_info "Downloading flatpak list for $variant_id and installing..."
+    if xargs -a <(curl --retry 3 -sL "$flatpak_url") flatpak --system -y install --reinstall; then
+        print_success "Flatpaks installation complete for $variant_id variant"
     else
         print_error "Failed to install flatpaks"
         exit 1
