@@ -32,6 +32,23 @@ print_info() {
     echo -e "${CYAN}ℹ $1${NC}"
 }
 
+# Detect desktop variant from /etc/os-release
+detect_variant() {
+    local variant_id=""
+    if [ -f /etc/os-release ]; then
+        # Source the os-release file to get VARIANT_ID
+        source /etc/os-release
+        variant_id="${VARIANT_ID:-}"
+    fi
+
+    # Default to kde if no variant detected
+    if [ -z "$variant_id" ]; then
+        variant_id="kde"
+    fi
+
+    echo "$variant_id"
+}
+
 show_help() {
     cat << 'EOF'
 SoltrOS Helper Tool
@@ -73,8 +90,6 @@ OTHER COMMANDS:
   clean                  Clean up the system
   distrobox              Manage distrobox containers
   toolbox                Manage toolbox containers
-
-OTHER COMMANDS:
   help                   Show this help message
   list                   List all available commands
 
@@ -84,11 +99,12 @@ EOF
 
 list_commands() {
     echo "Available commands:"
-    echo "  install install-flatpaks install-dev-tools install-gaming install-multimedia"
-    echo "  setup-git setup-cli setup-distrobox"
-    echo "  enable-amdgpu-oc toggle-session"
-    echo "  update clean distrobox toolbox"
-    echo "  help list"
+    echo "  install install-flatpaks uninstall-flatpaks install-dev-tools install-gaming install-multimedia"
+    echo "  install-homebrew install-nix setup-nixmanager add-helper add-nixmanager download-appimages"
+    echo "  change-to-zsh change-to-fish change-to-bash change-to-stable change-to-unstable"
+    echo "  apply-soltros-look_plasma apply-soltros-look_cosmic set-hyprvibe-theme helper-off"
+    echo "  setup-git setup-distrobox enable-amdgpu-oc toggle-session"
+    echo "  update clean distrobox toolbox help list"
 }
 
 # ───────────────────────────────────────────────
@@ -106,45 +122,34 @@ soltros_install_flatpaks() {
     print_info "Setting up Flathub repository..."
     if ! flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo; then
         print_error "Failed to add Flathub repository"
-        exit 1
+        return 1
     fi
 
-    # Detect desktop variant from /etc/os-release
-    local variant_id=""
-    if [ -f /etc/os-release ]; then
-        # Source the os-release file to get VARIANT_ID
-        source /etc/os-release
-        variant_id="${VARIANT_ID:-}"
-    fi
-
-    # Default to kde if no variant detected
-    if [ -z "$variant_id" ]; then
-        print_warning "No VARIANT_ID detected in /etc/os-release, defaulting to KDE"
-        variant_id="kde"
-    fi
+    # Detect desktop variant
+    local variant_id=$(detect_variant)
 
     # Determine which flatpak list to use based on variant
     local flatpak_url=""
     case "$variant_id" in
         kde)
-            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_kde"
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_kde"
             print_info "Detected KDE Plasma variant"
             ;;
         cosmic)
-            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_cosmic"
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_cosmic"
             print_info "Detected COSMIC variant"
             ;;
         gnome)
-            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_gnome"
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_gnome"
             print_info "Detected Gnome variant"
             ;;
         hyprvibe)
-            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_hyprvibe"
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_hyprvibe"
             print_info "Detected Hyprvibe variant"
             ;;
         *)
             print_warning "Unknown variant '$variant_id', defaulting to KDE"
-            flatpak_url=".githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_kde"
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_kde"
             ;;
     esac
 
@@ -153,7 +158,47 @@ soltros_install_flatpaks() {
         print_success "Flatpaks installation complete for $variant_id variant"
     else
         print_error "Failed to install flatpaks"
-        exit 1
+        return 1
+    fi
+}
+
+soltros_uninstall_flatpaks() {
+    print_header "Uninstalling Flatpak applications from variant list"
+
+    # Detect desktop variant
+    local variant_id=$(detect_variant)
+
+    # Determine which flatpak list to use based on variant
+    local flatpak_url=""
+    case "$variant_id" in
+        kde)
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_kde"
+            print_info "Detected KDE Plasma variant"
+            ;;
+        cosmic)
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_cosmic"
+            print_info "Detected COSMIC variant"
+            ;;
+        gnome)
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_gnome"
+            print_info "Detected Gnome variant"
+            ;;
+        hyprvibe)
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_hyprvibe"
+            print_info "Detected Hyprvibe variant"
+            ;;
+        *)
+            print_warning "Unknown variant '$variant_id', defaulting to KDE"
+            flatpak_url="https://raw.githubusercontent.com/soltros/Soltros-OS-Components/refs/heads/master/flatpaks_kde"
+            ;;
+    esac
+
+    print_info "Downloading flatpak list for $variant_id and uninstalling..."
+    if xargs -a <(curl --retry 3 -sL "$flatpak_url") flatpak --system -y uninstall; then
+        print_success "Flatpaks uninstallation complete for $variant_id variant"
+    else
+        print_error "Failed to uninstall flatpaks"
+        return 1
     fi
 }
 
@@ -216,7 +261,7 @@ change_to_stable() {
                 variant_id="hyprvibe"
                 ;;
             *)
-                echo "Unknown desktop '$choice_raw'. Use: kde|cosmic"
+                echo "Unknown desktop '$choice_raw'. Use: kde|cosmic|gnome|hyprvibe"
                 return 2
                 ;;
         esac
@@ -334,7 +379,7 @@ change_to_unstable() {
                 variant_id="hyprvibe"
                 ;;
             *)
-                echo "Unknown desktop '$choice_raw'. Use: kde|cosmic"
+                echo "Unknown desktop '$choice_raw'. Use: kde|cosmic|gnome|hyprvibe"
                 return 2
                 ;;
         esac
@@ -404,31 +449,31 @@ install_homebrew() {
         echo "Please restart your terminal or run 'source ~/.bashrc' to use brew"
     else
         print_error "Failed to install the Brew package manager"
-        exit 1
+        return 1
     fi
 }
 
 install_nix() {
     print_header "Setting up Nix via Determinite Nix installer."
-    if /bin/bash /nix/determinate-nix-installer.sh install
-        mkdir -p ~/.config/nixpkgs-soltros/
+    if /bin/bash /nix/determinate-nix-installer.sh install && \
+        mkdir -p ~/.config/nixpkgs-soltros/ && \
         wget https://raw.githubusercontent.com/soltros/random-stuff/refs/heads/main/configs/flake.nix -O ~/.config/nixpkgs-soltros/flake.nix; then
         print_success "Successfully installed and enabled the Nix package manager on SoltrOS."
     else
         print_error "Failed to install and enable the Nix package manager on SoltrOS."
-        exit 1
+        return 1
     fi
 }
 
 setup_nixmanager() {
     print_header "Setting up the nixmanager.sh script."
-    if mkdir -p ~/scripts/
-    cp /usr/share/soltros/bin/nixmanager.sh ~/scripts/
-    chmod +x ~/scripts/nixmanager.sh; then
+    if mkdir -p ~/scripts/ && \
+        cp /usr/share/soltros/bin/nixmanager.sh ~/scripts/ && \
+        chmod +x ~/scripts/nixmanager.sh; then
         print_success "nixmanager.sh installed! Please run sh ~/scripts/nixmanager.sh, or nixmanager in the Zsh shell!"
     else
         print_error "Failed to setup nixmanager.sh"
-        exit 1
+        return 1
     fi
 }
 
@@ -459,30 +504,42 @@ add_nixmanager() {
 }
 
 apply_soltros_look_plasma() {
-    if echo "To apply the theme, run the theme script."; then
-        echo "sh /usr/share/soltros/bin/soltros-os-theme_plasma.sh"
+    print_header "Applying SoltrOS theme for Plasma"
+
+    if [ -f /usr/share/soltros/bin/soltros-os-theme_plasma.sh ]; then
+        print_info "Running theme script..."
+        sh /usr/share/soltros/bin/soltros-os-theme_plasma.sh
     else
-        echo "Run helper to acess the help script."
+        print_error "Theme script not found at /usr/share/soltros/bin/soltros-os-theme_plasma.sh"
+        return 1
     fi
 }
 
 apply_soltros_look_cosmic() {
-    if echo "To apply the theme, run the theme script."; then
-        echo "sh /usr/share/soltros/bin/soltros-os-theme_cosmic.sh"
+    print_header "Applying SoltrOS theme for COSMIC"
+
+    if [ -f /usr/share/soltros/bin/soltros-os-theme_cosmic.sh ]; then
+        print_info "Running theme script..."
+        sh /usr/share/soltros/bin/soltros-os-theme_cosmic.sh
     else
-        echo "Run helper to acess the help script."
+        print_error "Theme script not found at /usr/share/soltros/bin/soltros-os-theme_cosmic.sh"
+        return 1
     fi
 }
 
 change_to_fish() {
     print_header "Changing to Fish"
-    if chsh -s /usr/bin/fish;then
-        rm ~/.config/fish/config.fish
+    if chsh -s /usr/bin/fish; then
+        # Backup existing config if it exists
+        if [ -f ~/.config/fish/config.fish ]; then
+            print_info "Backing up existing Fish config..."
+            cp ~/.config/fish/config.fish ~/.config/fish/config.fish.bak
+        fi
         wget https://raw.githubusercontent.com/soltros/Soltros-OS/refs/heads/main/system_files/etc/skel/.config/fish/config.fish -O ~/.config/fish/config.fish
         print_success "Changed shell to Fish"
     else
         print_error "Failed to change shell to Fish"
-        exit 1
+        return 1
     fi
 }
 
@@ -492,19 +549,23 @@ change_to_zsh() {
         print_success "Changed shell to Zsh"
     else
         print_error "Failed to change shell to Zsh"
-        exit 1
+        return 1
     fi
 }
 
 change_to_bash() {
     print_header "Changing shell to Bash"
     if chsh -s /usr/bin/bash; then
-        rm ~/.bashrc
+        # Backup existing bashrc if it exists
+        if [ -f ~/.bashrc ]; then
+            print_info "Backing up existing Bash config..."
+            cp ~/.bashrc ~/.bashrc.bak
+        fi
         wget https://raw.githubusercontent.com/soltros/Soltros-OS/refs/heads/main/system_files/etc/skel/.bashrc -O ~/.bashrc
         print_success "Changed shell to Bash."
     else
         print_error "Failed to change to Bash."
-        exit 1
+        return 1
     fi
 }
 
@@ -535,9 +596,26 @@ set_hyprvibe_theme() {
     fi
 }
 
+install_dev_tools() {
+    print_header "Installing development tools via Flatpak"
+
+    print_info "Installing development tools..."
+    if flatpak install -y flathub \
+        com.visualstudio.code \
+        io.podman_desktop.PodmanDesktop \
+        rest.insomnia.Insomnia \
+        com.getpostman.Postman \
+        io.dbeaver.DBeaverCommunity; then
+        print_success "Development tools installed!"
+    else
+        print_error "Failed to install development tools"
+        return 1
+    fi
+}
+
 install_gaming() {
     print_header "Installing gaming applications via Flatpak"
-    
+
     print_info "Installing gaming applications..."
     if flatpak install -y flathub \
         com.valvesoftware.Steam \
@@ -549,27 +627,35 @@ install_gaming() {
         print_success "Gaming setup complete!"
     else
         print_error "Failed to install gaming applications"
-        exit 1
+        return 1
     fi
 }
 
 download_appimages() {
     print_header "Downloading AppImages"
 
-    print_info "Downloading AppImages..."
-    if mkdir -p ~/AppImages/; then
-        wget https://github.com/jeffvli/feishin/releases/download/v0.17.0/Feishin-0.17.0-linux-x86_64.AppImage -O ~/AppImages/Feishin-0.17.0-linux-x86_64.AppImage
-        wget https://git.ryujinx.app/api/v4/projects/1/packages/generic/Ryubing/1.3.2/ryujinx-1.3.2-x64.AppImage -O ~/AppImages/ryujinx-1.3.2-x64.AppImage
-        print_success AppImage files downloaded to ~/AppImages/
-    else
-        print_error "Failed to download AppImage files"
-        exit 1
+    print_info "Creating AppImages directory..."
+    if ! mkdir -p ~/AppImages/; then
+        print_error "Failed to create AppImages directory"
+        return 1
     fi
+
+    print_info "Downloading Feishin..."
+    if ! wget https://github.com/jeffvli/feishin/releases/download/v0.17.0/Feishin-0.17.0-linux-x86_64.AppImage -O ~/AppImages/Feishin-0.17.0-linux-x86_64.AppImage; then
+        print_warning "Failed to download Feishin AppImage"
+    fi
+
+    print_info "Downloading Ryujinx..."
+    if ! wget https://git.ryujinx.app/api/v4/projects/1/packages/generic/Ryubing/1.3.2/ryujinx-1.3.2-x64.AppImage -O ~/AppImages/ryujinx-1.3.2-x64.AppImage; then
+        print_warning "Failed to download Ryujinx AppImage"
+    fi
+
+    print_success "AppImage download process complete. Check ~/AppImages/ for downloaded files."
 }
 
 install_multimedia() {
     print_header "Installing multimedia applications via Flatpak"
-    
+
     print_info "Installing multimedia applications..."
     if flatpak install -y flathub \
         org.audacityteam.Audacity \
@@ -582,7 +668,18 @@ install_multimedia() {
         print_success "Multimedia tools installed!"
     else
         print_error "Failed to install multimedia tools"
-        exit 1
+        return 1
+    fi
+}
+
+helper_off() {
+    print_header "Disabling helper prompt"
+
+    if touch ~/.no-helper-reminder; then
+        print_success "Helper prompt disabled. Delete ~/.no-helper-reminder to re-enable."
+    else
+        print_error "Failed to disable helper prompt"
+        return 1
     fi
 }
 
@@ -682,8 +779,8 @@ soltros_enable_amdgpu_oc() {
 
 toggle_session() {
     print_header "Session Toggle Information"
-    
-    current_session=$(echo $XDG_SESSION_TYPE)
+
+    current_session=$(echo "$XDG_SESSION_TYPE")
     print_info "Current session: $current_session"
     
     if [ "$current_session" = "wayland" ]; then
@@ -790,6 +887,9 @@ main() {
         "install-flatpaks")
             soltros_install_flatpaks
             ;;
+        "uninstall-flatpaks")
+            soltros_uninstall_flatpaks
+            ;;
         "install-dev-tools")
             install_dev_tools
             ;;
@@ -840,6 +940,9 @@ main() {
             ;;
         "download-appimages")
             download_appimages
+            ;;
+        "helper-off")
+            helper_off
             ;;
         "setup-git")
             soltros_setup_git
