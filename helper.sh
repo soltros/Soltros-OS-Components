@@ -75,6 +75,7 @@ INSTALL COMMANDS:
   apply-soltros-look_plasma Apply the SoltrOS theme to Plasma
   apply-soltros-look_cosmic Apply the SoltrOS theme to Cosmic
   set-hyprvibe-theme        Apply Hyprvibe theme from /etc/skel (overwrites Hyprland/Dunst/Waybar configs)
+  apply-soltros-personal-hyprland Apply personal Hyprland configs from soltros_hyprland repo
   helper-off                Turn off the helper prompt in Zsh (delete ~/.no-helper-reminder to re-enable)
 
 SETUP COMMANDS:
@@ -102,7 +103,7 @@ list_commands() {
     echo "  install install-flatpaks uninstall-flatpaks install-dev-tools install-gaming install-multimedia"
     echo "  install-homebrew install-nix setup-nixmanager add-helper add-nixmanager download-appimages"
     echo "  change-to-zsh change-to-fish change-to-bash change-to-stable change-to-unstable"
-    echo "  apply-soltros-look_plasma apply-soltros-look_cosmic set-hyprvibe-theme helper-off"
+    echo "  apply-soltros-look_plasma apply-soltros-look_cosmic set-hyprvibe-theme apply-soltros-personal-hyprland helper-off"
     echo "  setup-git setup-distrobox enable-amdgpu-oc toggle-session"
     echo "  update clean distrobox toolbox help list"
 }
@@ -596,6 +597,65 @@ set_hyprvibe_theme() {
     fi
 }
 
+apply_soltros_personal_hyprland() {
+    print_header "Applying Soltros Personal Hyprland Configuration"
+
+    print_warning "This will overwrite your existing Hyprland, Dunst, Waybar, and Wofi configurations!"
+    print_warning "This will also remove /etc/xdg/hypr/hyprland.conf"
+    echo
+    read -p "Do you want to continue? (Y/N): " -n 1 -r
+    echo
+
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Operation cancelled by user"
+        return 0
+    fi
+
+    # Create temporary directory for cloning
+    local temp_dir=$(mktemp -d)
+
+    print_info "Cloning soltros_hyprland repository..."
+    if ! git clone https://github.com/soltros/soltros_hyprland.git "$temp_dir"; then
+        print_error "Failed to clone repository"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    # Ensure .config directory exists
+    mkdir -p ~/.config
+
+    # Copy configuration directories
+    print_info "Copying Hyprland configurations to ~/.config/..."
+
+    for config_dir in dunst hypr waybar wofi; do
+        if [ -d "$temp_dir/$config_dir" ]; then
+            print_info "Copying $config_dir..."
+            cp -rf "$temp_dir/$config_dir" ~/.config/
+        else
+            print_warning "$config_dir directory not found in repository"
+        fi
+    done
+
+    # Remove /etc/xdg/hypr/hyprland.conf
+    print_info "Removing /etc/xdg/hypr/hyprland.conf..."
+    if [ -f /etc/xdg/hypr/hyprland.conf ]; then
+        if sudo rm -f /etc/xdg/hypr/hyprland.conf; then
+            print_success "Removed /etc/xdg/hypr/hyprland.conf"
+        else
+            print_warning "Failed to remove /etc/xdg/hypr/hyprland.conf (may require manual removal)"
+        fi
+    else
+        print_info "/etc/xdg/hypr/hyprland.conf does not exist, skipping..."
+    fi
+
+    # Clean up temporary directory
+    rm -rf "$temp_dir"
+
+    print_success "Soltros personal Hyprland configurations applied successfully!"
+    print_info "Configurations updated: Hyprland, Dunst, Waybar, Wofi"
+    print_info "You may need to restart Hyprland for all changes to take effect"
+}
+
 install_dev_tools() {
     print_header "Installing development tools via Flatpak"
 
@@ -937,6 +997,9 @@ main() {
             ;;
         "set-hyprvibe-theme")
             set_hyprvibe_theme
+            ;;
+        "apply-soltros-personal-hyprland")
+            apply_soltros_personal_hyprland
             ;;
         "download-appimages")
             download_appimages
