@@ -15,6 +15,7 @@ io.github.flattool.Warehouse
 io.missioncenter.MissionCenter
 com.vysp3r.ProtonPlus
 org.libretro.RetroArch
+org.gnome.Fractal
 net.lutris.Lutris
 org.libreoffice.LibreOffice
 com.github.iwalton3.jellyfin-media-player
