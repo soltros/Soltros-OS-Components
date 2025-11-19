@@ -624,17 +624,40 @@ apply_soltros_personal_hyprland() {
     # Ensure .config directory exists
     mkdir -p ~/.config
 
+    # Create dated backup directory
+    local backup_dir="$HOME/.config/hyprland-backups/$(date +%Y%m%d-%H%M%S)"
+    mkdir -p "$backup_dir"
+
     # Copy configuration directories
     print_info "Copying Hyprland configurations to ~/.config/..."
 
     for config_dir in dunst hypr waybar wofi; do
         if [ -d "$temp_dir/$config_dir" ]; then
+            # Backup existing config if it exists
+            if [ -d "$HOME/.config/$config_dir" ]; then
+                print_info "Backing up existing $config_dir to $backup_dir..."
+                cp -rf "$HOME/.config/$config_dir" "$backup_dir/"
+            fi
+
             print_info "Copying $config_dir..."
             cp -rf "$temp_dir/$config_dir" ~/.config/
         else
             print_warning "$config_dir directory not found in repository"
         fi
     done
+
+    # Ensure scripts directory exists and copy toggle_floating_waybar.sh
+    print_info "Setting up Hyprland scripts..."
+    mkdir -p ~/.config/hypr/scripts/
+
+    if [ -f "$temp_dir/toggle_floating_waybar.sh" ]; then
+        print_info "Copying toggle_floating_waybar.sh..."
+        cp "$temp_dir/toggle_floating_waybar.sh" ~/.config/hypr/scripts/
+        chmod +x ~/.config/hypr/scripts/toggle_floating_waybar.sh
+        print_success "toggle_floating_waybar.sh installed and made executable"
+    else
+        print_warning "toggle_floating_waybar.sh not found in repository"
+    fi
 
     # Remove /etc/xdg/hypr/hyprland.conf
     print_info "Removing /etc/xdg/hypr/hyprland.conf..."
@@ -653,6 +676,7 @@ apply_soltros_personal_hyprland() {
 
     print_success "Soltros personal Hyprland configurations applied successfully!"
     print_info "Configurations updated: Hyprland, Dunst, Waybar, Wofi"
+    print_info "Backup saved to: $backup_dir"
     print_info "You may need to restart Hyprland for all changes to take effect"
 }
 
