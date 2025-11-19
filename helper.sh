@@ -650,9 +650,9 @@ apply_soltros_personal_hyprland() {
     print_info "Setting up Hyprland scripts..."
     mkdir -p ~/.config/hypr/scripts/
 
-    if [ -f "$temp_dir/toggle_floating_waybar.sh" ]; then
+    if [ -f "$temp_dir/hypr/scripts/toggle_floating_waybar.sh" ]; then
         print_info "Copying toggle_floating_waybar.sh..."
-        cp "$temp_dir/toggle_floating_waybar.sh" ~/.config/hypr/scripts/
+        cp "$temp_dir/hypr/scripts/toggle_floating_waybar.sh" ~/.config/hypr/scripts/
         chmod +x ~/.config/hypr/scripts/toggle_floating_waybar.sh
         print_success "toggle_floating_waybar.sh installed and made executable"
     else
