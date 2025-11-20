@@ -659,6 +659,21 @@ apply_soltros_personal_hyprland() {
         print_warning "toggle_floating_waybar.sh not found in repository"
     fi
 
+    # Ensure dynamic.css exists in ~/.cache/waybar/
+    print_info "Checking for dynamic.css in ~/.cache/waybar/..."
+    mkdir -p ~/.cache/waybar/
+
+    if [ ! -f ~/.cache/waybar/dynamic.css ]; then
+        print_info "dynamic.css not found, downloading from repository..."
+        if wget https://raw.githubusercontent.com/soltros/soltros_hyprland/refs/heads/main/dynamic.css -O ~/.cache/waybar/dynamic.css; then
+            print_success "dynamic.css downloaded successfully to ~/.cache/waybar/"
+        else
+            print_error "Failed to download dynamic.css"
+        fi
+    else
+        print_success "dynamic.css already exists in ~/.cache/waybar/"
+    fi
+
     # Remove /etc/xdg/hypr/hyprland.conf
     print_info "Removing /etc/xdg/hypr/hyprland.conf..."
     if [ -f /etc/xdg/hypr/hyprland.conf ]; then
