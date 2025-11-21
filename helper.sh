@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SoltrOS Helper Tool
+# SoltrOS Helper Tool.
 
 set -euo pipefail
 
