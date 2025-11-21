@@ -1,0 +1,44 @@
+# This workflow should be placed in the Soltros-OS-Components repository at:
+# .github/workflows/trigger-image-rebuild.yml
+#
+# It will trigger a rebuild of all SoltrOS images when components are updated
+
+name: Trigger SoltrOS Image Rebuild
+
+on:
+  push:
+    branches:
+      - main  # Adjust this to match your Components repo's main branch
+    paths-ignore:
+      - '**/README.md'
+      - '**/*.md'
+      - '.github/**'  # Don't trigger on workflow changes
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  trigger-rebuild:
+    name: Notify SoltrOS to rebuild images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send repository dispatch to SoltrOS
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.SOLTROS_OS_PAT }}
+          repository: soltros/Soltros-Os  # Target repository
+          event-type: component-update
+          client-payload: |
+            {
+              "component_repo": "${{ github.repository }}",
+              "component_ref": "${{ github.ref }}",
+              "component_sha": "${{ github.sha }}",
+              "component_pusher": "${{ github.actor }}",
+              "component_commit_message": "${{ github.event.head_commit.message }}"
+            }
+
+      - name: Success notification
+        run: |
+          echo "✅ Successfully triggered SoltrOS image rebuild"
+          echo "Repository: soltros/Soltros-Os"
+          echo "Triggered by: Component update in ${{ github.repository }}"
+          echo "Commit: ${{ github.sha }}"
