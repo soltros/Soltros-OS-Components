@@ -600,7 +600,7 @@ set_hyprvibe_theme() {
 apply_soltros_personal_hyprland() {
     print_header "Applying Soltros Personal Hyprland Configuration"
 
-    print_warning "This will overwrite your existing Hyprland, Dunst, Waybar, and Wofi configurations!"
+    print_warning "This will overwrite your existing Hyprland, Dunst, Ashell, and Wofi configurations!"
     print_warning "This will also remove /etc/xdg/hypr/hyprland.conf"
     echo
     read -p "Do you want to continue? (Y/N): " -n 1 -r
@@ -631,7 +631,7 @@ apply_soltros_personal_hyprland() {
     # Copy configuration directories
     print_info "Copying Hyprland configurations to ~/.config/..."
 
-    for config_dir in dunst hypr waybar wofi; do
+    for config_dir in dunst hypr ashell wofi; do
         if [ -d "$temp_dir/$config_dir" ]; then
             # Backup existing config if it exists
             if [ -d "$HOME/.config/$config_dir" ]; then
@@ -646,33 +646,9 @@ apply_soltros_personal_hyprland() {
         fi
     done
 
-    # Ensure scripts directory exists and copy toggle_floating_waybar.sh
+    # Ensure scripts directory exists
     print_info "Setting up Hyprland scripts..."
     mkdir -p ~/.config/hypr/scripts/
-
-    if [ -f "$temp_dir/hypr/scripts/toggle_floating_waybar.sh" ]; then
-        print_info "Copying toggle_floating_waybar.sh..."
-        cp "$temp_dir/hypr/scripts/toggle_floating_waybar.sh" ~/.config/hypr/scripts/
-        chmod +x ~/.config/hypr/scripts/toggle_floating_waybar.sh
-        print_success "toggle_floating_waybar.sh installed and made executable"
-    else
-        print_warning "toggle_floating_waybar.sh not found in repository"
-    fi
-
-    # Ensure dynamic.css exists in ~/.cache/waybar/
-    print_info "Checking for dynamic.css in ~/.cache/waybar/..."
-    mkdir -p ~/.cache/waybar/
-
-    if [ ! -f ~/.cache/waybar/dynamic.css ]; then
-        print_info "dynamic.css not found, downloading from repository..."
-        if wget https://raw.githubusercontent.com/soltros/soltros_hyprland/refs/heads/main/dynamic.css -O ~/.cache/waybar/dynamic.css; then
-            print_success "dynamic.css downloaded successfully to ~/.cache/waybar/"
-        else
-            print_error "Failed to download dynamic.css"
-        fi
-    else
-        print_success "dynamic.css already exists in ~/.cache/waybar/"
-    fi
 
     # Remove /etc/xdg/hypr/hyprland.conf
     print_info "Removing /etc/xdg/hypr/hyprland.conf..."
@@ -690,7 +666,7 @@ apply_soltros_personal_hyprland() {
     rm -rf "$temp_dir"
 
     print_success "Soltros personal Hyprland configurations applied successfully!"
-    print_info "Configurations updated: Hyprland, Dunst, Waybar, Wofi"
+    print_info "Configurations updated: Hyprland, Dunst, Ashell, Wofi"
     print_info "Backup saved to: $backup_dir"
     print_info "You may need to restart Hyprland for all changes to take effect"
 }
